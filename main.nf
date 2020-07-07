@@ -258,7 +258,7 @@ workflow CNVkit_wf {
 
 	 
   	 normal_coverage = coverage.out.filter { it[2] == 'Normal'}.groupTuple().map { r -> [r[0],r[4], r[5]] }
-	 tumor_coverage = coverage.out.filter { it[2] == 'Tumor'}
+	 tumor_coverage = coverage.out.filter { it[2] == 'Tumor' | it[2] == 'PDX' }
 	 
 	 pon_reference(normal_coverage, reference)
 	 
