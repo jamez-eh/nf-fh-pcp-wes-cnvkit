@@ -124,10 +124,10 @@ process	fix {
         label 'small'
 
 	input:
-	tuple val(kitID), path(pon), val(sampleID), val(type), val(patientID), path(targets), path(antitargets)
+	tuple val(kitID), path(pon), val(sampleID), val(type), val(patientID), path(targets), path(antitargets), val(purity), val(ploidy)
 
 	output:
-	tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}.cnr")
+	tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}.cnr"),  val("${purity}"), val("${ploidy}")
 
 	"""
 	cnvkit.py fix ${targets} ${antitargets} ${pon} -o ${sampleID}.cnr
@@ -140,10 +140,10 @@ process segment {
         label 'medium'
 	
 	input:
-	tuple val(sampleID), val(patientID), path(cnr)
+	tuple val(sampleID), val(patientID), path(cnr), val(purity), val(ploidy)
 
 	output:
-	tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}.cns")
+	tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}.cns"), val("${purity}"), val("${ploidy}")
 
 	"""
 	cnvkit.py segment ${cnr} -o ${sampleID}.cns
@@ -155,10 +155,10 @@ process center {
         label 'small'
 
         input:
-        tuple val(sampleID), val(patientID), path(cns)
+        tuple val(sampleID), val(patientID), path(cns), val(purity), val(ploidy)
 
         output:
-        tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}_centered.cns")
+        tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}_centered.cns"), val("${purity}"), val("${ploidy}")
 
 	"""
 	cnvkit.py call -h
@@ -173,7 +173,7 @@ process callCNV {
         label 'small'
 
         input:
-        tuple val(sampleID), val(patientID), path(cns)
+        tuple val(sampleID), val(patientID), path(cns), val(purity), val(ploidy)
 
         output:
         tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}_calls.cns")
@@ -193,7 +193,7 @@ process callCNV_vcf {
         label 'small'
 
         input:
-        tuple val(sampleID), val(patientID), path(cns)
+        tuple val(sampleID), val(patientID), path(cns), val(purity), val(ploidy)
 
         output:
         tuple val("${sampleID}"), val("${patientID}"), path("${sampleID}_calls.cns")
@@ -240,8 +240,6 @@ workflow CNVkit_wf {
          beds_ch
          reference
 	 refFlat
-	// coords
-		
 	 
 	 main:
 	 access(reference)
@@ -254,18 +252,19 @@ workflow CNVkit_wf {
 
 	 
 	 coverage(bams_target, access.out, refFlat)
-
-
+	 
 	 
   	 normal_coverage = coverage.out.filter { it[2] == 'Normal'}.groupTuple().map { r -> [r[0],r[4], r[5]] }
 	 tumor_coverage = coverage.out.filter { it[2] == 'Tumor' | it[2] == 'PDX' }
 	 
 	 pon_reference(normal_coverage, reference)
 	 
-	
-	 pon_crossed = pon_reference.out.cross(tumor_coverage).map{ r -> [r[0][0], r[0][1], r[1][1], r[1][2], r[1][3], r[1][4], r[1][5]] }
-
+	 tumor_coverage.view()
+	 pon_crossed = pon_reference.out.cross(tumor_coverage).map{ r -> [r[0][0], r[0][1], r[1][1], r[1][2], r[1][3], r[1][4], r[1][5], r[1][6], r[1][7]] }
+	 
+	 
 	 fix(pon_crossed)
+	 fix.out.view()
 	 segment(fix.out)
 	 center(segment.out)
 	
