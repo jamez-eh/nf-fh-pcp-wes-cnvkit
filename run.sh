@@ -21,7 +21,6 @@ NXF_VER=20.01.0 nextflow \
     --cnvnator false \
     --gatk_single_var false \
     --input_csv ../manifests/lucap_manifest.txt \
-    --input_vcf ./vcfs.txt \
     --output_folder /fh/scratch/delete90/nelson_p/james/funcotating/cnvkit2/\
     --pdx_reference $BASE_BUCKET/references/mm10/GRCm38.primary_assembly.genome.fa \
     --reference $BASE_BUCKET/references/hg38/Homo_sapiens_assembly38.fa \
