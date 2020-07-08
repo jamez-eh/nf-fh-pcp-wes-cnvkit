@@ -19,6 +19,7 @@ process access {
 
 process target {
 	container 'etal/cnvkit'
+	label 'small'
 
 	input:
 	tuple val(kitID), path(bed_file)
@@ -38,7 +39,7 @@ process target {
 
 process coverage {
         container 'etal/cnvkit'
-        label 'medium'
+        label 'small'
 
         input:
 	tuple val(kitID), path(target), path(antitarget), val(sampleID), val(type), val(patientID), path(bam), val(ploidy), val(purity)
@@ -53,7 +54,7 @@ process coverage {
         cnvkit.py coverage ${bam} ${antitarget} -o ${sampleID}.antitargetcoverage.cnn
         """
 }
-// --target-max-size 
+
 
 
 process pon_reference {
@@ -74,37 +75,6 @@ process pon_reference {
 
         """
 }
-
-process batch_CNVkit {
-	container 'jamezeh/cnvkit'
-	label 'medium'
-	cpus 10
-
-
-	input:
-	tuple val(kitID), file(bed), file(bams)
-	path reference
-	path refFlat
-	
-	output:
-	tuple val("${kitID}"), path("${kitID}_cnvkit")
-
-	"""
-	cnvkit.py batch *Tumor.bam \
-            --normal *Normal.bam \
-	    --targets ${bed} \
-	    --annotate ${refFlat} \
-   	     --fasta ${reference} \
-    	     --output-reference ${kitID}.cnn \
-	     --output-dir ${kitID}_cnvkit  \
-    	     --diagram --scatter \
-	     -p ${task.cpus} \
-	     -y \
-	     --drop-low-coverage \
-	"""
-
-}
-
 
 
 process autobin {
@@ -137,7 +107,7 @@ process	fix {
 
 process segment {
         container 'etal/cnvkit'
-        label 'medium'
+        label 'small'
 	
 	input:
 	tuple val(sampleID), val(patientID), path(cnr), val(purity), val(ploidy)
